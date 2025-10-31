@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CookieBanner } from "@/components/CookieBanner";
 import PremiumLayout from "@/components/PremiumLayout";
+import OnboardingContainer from "@/components/onboarding/OnboardingContainer";
 import { Suspense, lazy, useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import NotFound from "@/pages/not-found";
