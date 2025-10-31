@@ -45,24 +45,24 @@ export const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ language = '
   const [showFundComparison, setShowFundComparison] = useState(false);
   const [showPayoutSimulator, setShowPayoutSimulator] = useState(false);
 
-  const scopeBoth = data.personal?.maritalStatus === 'verheiratet' && data.personal?.calcScope === 'beide_personen';
+  const scopeBoth = data?.personal?.maritalStatus === 'verheiratet' && data?.personal?.calcScope === 'beide_personen';
   const netMonthlyIncome = scopeBoth
-    ? (data.income.netMonthly_A || 0) + (data.income.netMonthly_B || 0)
-    : data.income.netMonthly || 0;
+    ? ((data?.income?.netMonthly_A || 0) + (data?.income?.netMonthly_B || 0))
+    : (data?.income?.netMonthly || 0);
 
-  const currentAge = data.personal?.age
-    ? data.personal.age
-    : data.personal?.birthYear
-      ? new Date().getFullYear() - data.personal.birthYear
+  const currentAge = data?.personal?.age
+    ? data?.personal?.age
+    : data?.personal?.birthYear
+      ? new Date().getFullYear() - data?.personal?.birthYear
       : 35;
 
   const privateContribution = scopeBoth
-    ? (data.privatePension.contribution_A || 0) + (data.privatePension.contribution_B || 0)
-    : data.privatePension.contribution || 0;
+    ? ((data?.privatePension?.contribution_A || 0) + (data?.privatePension?.contribution_B || 0))
+    : (data?.privatePension?.contribution || 0);
 
   const fundBalance = scopeBoth
-    ? (data.funds.balance_A || 0) + (data.funds.balance_B || 0)
-    : data.funds.balance || 0;
+    ? ((data?.funds?.balance_A || 0) + (data?.funds?.balance_B || 0))
+    : (data?.funds?.balance || 0);
 
   const retirementAge = 67;
 

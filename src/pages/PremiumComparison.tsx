@@ -76,9 +76,9 @@ export const PremiumComparison: React.FC<PremiumComparisonProps> = ({ language =
     : (data?.income?.netMonthly || 0);
 
   const currentAge = data?.personal?.age
-    ? data.personal.age
+    ? data?.personal?.age
     : data?.personal?.birthYear
-      ? new Date().getFullYear() - data.personal.birthYear
+      ? new Date().getFullYear() - data?.personal?.birthYear
       : 35;
 
   const privateContribution = scopeBoth
