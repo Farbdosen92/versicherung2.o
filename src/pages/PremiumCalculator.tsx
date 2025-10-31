@@ -89,12 +89,12 @@ export const PremiumCalculator: React.FC<PremiumCalculatorProps> = ({ language =
     }
   }, [onboardingData, isCompleted]);
 
-  const scopeBoth = onboardingData.personal?.maritalStatus === 'verheiratet' &&
-    onboardingData.personal?.calcScope === 'beide_personen';
+  const scopeBoth = onboardingData?.personal?.maritalStatus === 'verheiratet' &&
+    onboardingData?.personal?.calcScope === 'beide_personen';
 
   const onboardingFundBalance = scopeBoth
-    ? (onboardingData.funds.balance_A || 0) + (onboardingData.funds.balance_B || 0)
-    : onboardingData.funds.balance || 0;
+    ? ((onboardingData?.funds?.balance_A || 0) + (onboardingData?.funds?.balance_B || 0))
+    : (onboardingData?.funds?.balance || 0);
 
   const texts = {
     de: {
