@@ -6,10 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CookieBanner } from "@/components/CookieBanner";
 import PremiumLayout from "@/components/PremiumLayout";
 import { Suspense, lazy, useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import NotFound from "@/pages/not-found";
-import OnboardingContainer from "@/components/onboarding/OnboardingContainer";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import { motion } from "framer-motion";
 
@@ -51,7 +49,7 @@ const getRuntimeBase = (): string => {
  *
  * Example: Browser sees "/app/calculator" → Router matches "/calculator"
  */
-const useGitHubPagesLocation = (): [string, (to: string, options?: any) => void] => {
+const useGitHubPagesLocation = (): [string, (to: string, options?: { replace?: boolean }) => void] => {
   const runtimeBase = getRuntimeBase();
 
   const [loc, setLoc] = useState(() => {
@@ -92,9 +90,9 @@ const useGitHubPagesLocation = (): [string, (to: string, options?: any) => void]
     // Listen to popstate events (browser back/forward)
     window.addEventListener("popstate", handler);
     return () => window.removeEventListener("popstate", handler);
-  }, []);
+  }, [runtimeBase]);
 
-    const navigate = (to: string, options?: any) => {
+  const navigate = (to: string, options?: { replace?: boolean }) => {
       // Add base path back when navigating (use runtime base)
       const prefix = runtimeBase !== "/" && runtimeBase !== "" ? runtimeBase.replace(/\/$/, "") : "";
       const fullPath = `${prefix}${to}` || to;
@@ -116,8 +114,6 @@ const PremiumDashboard = lazy(() => import("@/pages/PremiumDashboard"));
 const PremiumCalculator = lazy(() => import("@/pages/PremiumCalculator"));
 const PremiumFunds = lazy(() => import("@/pages/PremiumFunds"));
 const PremiumComparison = lazy(() => import("@/pages/PremiumComparison"));
-const Dashboard = lazy(() => import("@/pages/dashboard"));
-const Home = lazy(() => import("@/pages/home"));
 const Questions = lazy(() => import("@/pages/questions"));
 const TaxCalculatorPage = lazy(() => import("@/pages/TaxCalculatorPage"));
 const Impressum = lazy(() => import("@/pages/impressum"));

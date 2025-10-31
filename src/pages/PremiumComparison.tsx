@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   BarChart3,
@@ -10,9 +10,6 @@ import {
   Share2,
   ArrowRight,
   TrendingUp,
-  DollarSign,
-  Shield,
-  Clock,
 } from 'lucide-react';
 import {
   Card,
@@ -22,22 +19,23 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useOnboardingStore } from '@/stores/onboardingStore';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+  AllPensionComparison,
+  CostImpactWaterfall,
+  FundSavingsPlanComparison,
+  FlexiblePayoutSimulator,
+  PensionGapCard,
+  TaxCockpit,
+} from '@/components/pension';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
+  calculateCostImpact,
+  projectPrivatePension,
+  calculateRetirementGap,
+  qualifiesFor1262,
+} from '@/lib/retirementMath';
+import { formatCurrency } from '@/lib/utils';
+import {
   ResponsiveContainer,
   Legend,
   RadarChart,
@@ -68,6 +66,100 @@ interface Product {
 
 export const PremiumComparison: React.FC<PremiumComparisonProps> = ({ language = 'de' }) => {
   const [selectedProducts, setSelectedProducts] = useState<string[]>(['riester', 'ruerup', 'private']);
+  const { data } = useOnboardingStore();
+  const [showFundComparison, setShowFundComparison] = useState(false);
+  const [showPayoutSimulator, setShowPayoutSimulator] = useState(false);
+
+  const scopeBoth = data.personal?.maritalStatus === 'verheiratet' && data.personal?.calcScope === 'beide_personen';
+  const netMonthlyIncome = scopeBoth
+    ? (data.income.netMonthly_A || 0) + (data.income.netMonthly_B || 0)
+    : data.income.netMonthly || 0;
+
+  const currentAge = data.personal?.age
+    ? data.personal.age
+    : data.personal?.birthYear
+      ? new Date().getFullYear() - data.personal.birthYear
+      : 35;
+
+  const privateContribution = scopeBoth
+    ? (data.privatePension.contribution_A || 0) + (data.privatePension.contribution_B || 0)
+    : data.privatePension.contribution || 0;
+
+  const fundBalance = scopeBoth
+    ? (data.funds.balance_A || 0) + (data.funds.balance_B || 0)
+    : data.funds.balance || 0;
+
+  const retirementAge = 67;
+  const estimatedPortfolioValue = (() => {
+    if (fundBalance && fundBalance > 0) return fundBalance;
+    if (privateContribution && privateContribution > 0) {
+      const years = Math.max(0, retirementAge - currentAge);
+      const annual = privateContribution * 12;
+      const assumedReturn = 0.05;
+      return annual * (Math.pow(1 + assumedReturn, years) - 1) / assumedReturn;
+    }
+    return 25000;
+  })();
+
+  const contractYears = Math.max(0, retirementAge - currentAge);
+
+  const insuranceProjection = useMemo(() => {
+    if (privateContribution <= 0 || contractYears <= 0) {
+      return null;
+    }
+
+    return projectPrivatePension({
+      monthlyContribution: privateContribution,
+      years: contractYears,
+      retirementAge,
+      useHalfIncomeTaxation: qualifiesFor1262(retirementAge, contractYears),
+    });
+  }, [privateContribution, contractYears, retirementAge]);
+
+  const statutory = useMemo(() => (
+    (scopeBoth
+      ? (data.pensions.public67_A || 0) + (data.pensions.public67_B || 0)
+      : data.pensions.public67 || 0) || 0
+  ), [data.pensions.public67, data.pensions.public67_A, data.pensions.public67_B, scopeBoth]);
+
+  const occupational = useMemo(() => (
+    (scopeBoth
+      ? (data.occupationalPension.amount_A || 0) + (data.occupationalPension.amount_B || 0)
+      : data.occupationalPension.amount || 0) || 0
+  ), [data.occupationalPension.amount, data.occupationalPension.amount_A, data.occupationalPension.amount_B, scopeBoth]);
+
+  const riesterIncome = useMemo(() => (
+    (scopeBoth
+      ? (data.riester.amount_A || 0) + (data.riester.amount_B || 0)
+      : data.riester.amount || 0) || 0
+  ), [data.riester.amount, data.riester.amount_A, data.riester.amount_B, scopeBoth]);
+
+  const insuranceNetMonthly = insuranceProjection?.netMonthly ?? 0;
+
+  const gapSummary = useMemo(() => calculateRetirementGap({
+    netIncome: netMonthlyIncome,
+    statutory,
+    occupational,
+    riester: riesterIncome,
+    privateNet: insuranceNetMonthly,
+  }), [netMonthlyIncome, statutory, occupational, riesterIncome, insuranceNetMonthly]);
+
+  const costSummary = useMemo(() => calculateCostImpact({
+    monthlyContribution: privateContribution > 0 ? privateContribution : 300,
+    contractYears: Math.max(12, contractYears),
+    etfFrontLoad: 0.05,
+    etfMgmtFee: 0.0075,
+    taxDragRate: 0.0125,
+  }), [contractYears, privateContribution]);
+
+  const insuranceProjectedValue = insuranceProjection?.projectedValue ?? 0;
+  const etfAdvantageAt67 = costSummary.summary.insuranceNet - costSummary.summary.etfNet;
+  const gapSeverityClass = gapSummary.gapRatio <= 0
+    ? 'text-emerald-600'
+    : gapSummary.gapRatio <= 0.1
+      ? 'text-yellow-600'
+      : 'text-red-500';
+  const advantageClass = etfAdvantageAt67 >= 0 ? 'text-emerald-600' : 'text-red-500';
 
   const texts = {
     de: {
@@ -94,6 +186,11 @@ export const PremiumComparison: React.FC<PremiumComparisonProps> = ({ language =
       download: 'Herunterladen',
       share: 'Teilen',
       recommendation: 'Empfehlung',
+      summaryTitle: 'Zentrale Kennzahlen',
+      gapLabel: 'Monatliche Versorgungslücke',
+      insuranceNetLabel: 'Debeka Netto (monatlich)',
+      insuranceValueLabel: 'Prognose Kapital (67)',
+      etfAdvantageLabel: 'Vorteil Steuerstundung',
     },
     en: {
       title: 'Product Comparison',
@@ -119,6 +216,11 @@ export const PremiumComparison: React.FC<PremiumComparisonProps> = ({ language =
       download: 'Download',
       share: 'Share',
       recommendation: 'Recommendation',
+      summaryTitle: 'Key Takeaways',
+      gapLabel: 'Monthly pension gap',
+      insuranceNetLabel: 'Debeka net (monthly)',
+      insuranceValueLabel: 'Projected capital (age 67)',
+      etfAdvantageLabel: 'Tax deferral advantage',
     },
   };
 
@@ -257,12 +359,6 @@ export const PremiumComparison: React.FC<PremiumComparisonProps> = ({ language =
     },
   ];
 
-  const comparisonData = selectedProducts.map((id) => ({
-    name: products[id].name,
-    contribution: products[id].monthlyContribution,
-    return: products[id].expectedReturn,
-  }));
-
   const addProduct = (productId: string) => {
     if (!selectedProducts.includes(productId) && selectedProducts.length < 4) {
       setSelectedProducts([...selectedProducts, productId]);
@@ -276,7 +372,8 @@ export const PremiumComparison: React.FC<PremiumComparisonProps> = ({ language =
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/20">
+    <>
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/20">
       {/* Hero Section */}
       <section className="relative overflow-hidden border-b border-border/30">
         <div className="container mx-auto px-4 lg:px-8 py-16">
@@ -309,6 +406,130 @@ export const PremiumComparison: React.FC<PremiumComparisonProps> = ({ language =
       </section>
 
       <div className="container mx-auto px-4 lg:px-8 py-12">
+        {/* Retirement Overview */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="space-y-10 mb-12"
+        >
+          <AllPensionComparison
+            language={language}
+            currentAge={currentAge}
+            netMonthlyIncome={netMonthlyIncome}
+            privatePensionMonthly={privateContribution || 0}
+            retirementAge={retirementAge}
+          />
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <PensionGapCard language={language} retirementAge={retirementAge} />
+            <div className="xl:col-span-2">
+              <TaxCockpit
+                language={language}
+                currentAgeOverride={currentAge}
+                retirementAgeOverride={retirementAge}
+                monthlyContributionOverride={privateContribution || undefined}
+                fundBalanceOverride={fundBalance || undefined}
+              />
+            </div>
+          </div>
+
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle>
+                {language === 'de'
+                  ? 'Debeka Police vs. ETF-Sparplan auf einen Blick'
+                  : 'Debeka policy vs. ETF savings plan at a glance'}
+              </CardTitle>
+              <CardDescription>
+                {language === 'de'
+                  ? 'Steuerliche Vorteile, Kostenstruktur und Risikokennzahlen nach KID'
+                  : 'Tax benefits, cost structure and risk metrics based on the KID'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-muted-foreground">
+              <ul className="list-disc list-inside space-y-2">
+                <li>{language === 'de'
+                  ? 'Ansparphase steuerfrei, Vorteil beim Zinseszinseffekt'
+                  : 'Tax deferral in accumulation phase maximises compounding'}</li>
+                <li>{language === 'de'
+                  ? 'Auszahlung: Ertragsanteilsbesteuerung oder 12/62 – oft deutlich unter Abgeltungsteuer'
+                  : 'Payout: earnings portion taxation or 12/62 rule – usually below capital gains tax'}</li>
+                <li>{language === 'de'
+                  ? 'Garantiebestandteile 1% p.a., Überschüsse 2024: 2,25% (nicht garantiert)'
+                  : 'Guarantee component 1% p.a., surplus 2024: 2.25% (non-guaranteed)'}</li>
+              </ul>
+              <ul className="list-disc list-inside space-y-2">
+                <li>{language === 'de'
+                  ? 'ETF-Depot: Vorabpauschale, Abgeltungsteuer 26,375%, Teilfreistellung 30%/15%'
+                  : 'ETF depot: advance lump sum, 26.375% capital gains tax, partial exemption 30%/15%'}</li>
+                <li>{language === 'de'
+                  ? 'Kosten laut KID: 2,5% Einstiegskosten (über 5 Jahre), 0,3% p.a. laufend + 12 €'
+                  : 'KID costs: 2.5% entry (over 5 years), 0.3% p.a. ongoing + €12'}</li>
+                <li>{language === 'de'
+                  ? 'Produkt-Risikoklasse 3/7 vs. Fondsrisiko 6/7 – differenziert erklärt'
+                  : 'Product risk class 3/7 vs. fund risk 6/7 – explained transparently'}</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <CostImpactWaterfall
+            language={language}
+            monthlyContribution={privateContribution || 300}
+            contractYears={Math.max(12, retirementAge - currentAge)}
+          />
+
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle>{t.summaryTitle}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div className="rounded-lg border border-border/40 bg-background/60 p-4">
+                  <p className="text-muted-foreground mb-1">{t.gapLabel}</p>
+                  <p className={`text-2xl font-semibold ${gapSeverityClass}`}>
+                    {formatCurrency(gapSummary.gapValue)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {language === 'de'
+                      ? `Rentenströme gesamt: ${formatCurrency(gapSummary.totalRetirement)}`
+                      : `Total retirement income: ${formatCurrency(gapSummary.totalRetirement)}`}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border/40 bg-background/60 p-4">
+                  <p className="text-muted-foreground mb-1">{t.insuranceNetLabel}</p>
+                  <p className="text-2xl font-semibold text-emerald-700">
+                    {formatCurrency(insuranceNetMonthly)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t.insuranceValueLabel}: {formatCurrency(insuranceProjectedValue)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border/40 bg-background/60 p-4">
+                  <p className="text-muted-foreground mb-1">{t.etfAdvantageLabel}</p>
+                  <p className={`text-2xl font-semibold ${advantageClass}`}>
+                    {formatCurrency(etfAdvantageAt67)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {language === 'de'
+                      ? `Netto nach 30 Jahren: ${formatCurrency(costSummary.summary.insuranceNet)} vs. ${formatCurrency(costSummary.summary.etfNet)}`
+                      : `Net after 30 years: ${formatCurrency(costSummary.summary.insuranceNet)} vs. ${formatCurrency(costSummary.summary.etfNet)}`}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex flex-col md:flex-row gap-4 justify-end">
+            <Button variant="outline" onClick={() => setShowFundComparison(true)}>
+              {language === 'de' ? 'Fonds vs. Police simulieren' : 'Simulate fund vs. insurance'}
+            </Button>
+            <Button onClick={() => setShowPayoutSimulator(true)}>
+              {language === 'de' ? 'Flexible Entnahme' : 'Flexible withdrawals'}
+            </Button>
+          </div>
+        </motion.section>
+
         {/* Product Selector */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -494,6 +715,25 @@ export const PremiumComparison: React.FC<PremiumComparisonProps> = ({ language =
         </motion.div>
       </div>
     </div>
+
+      <FundSavingsPlanComparison
+        isOpen={showFundComparison}
+        onClose={() => setShowFundComparison(false)}
+        monthlyContribution={privateContribution || 300}
+        currentAge={currentAge}
+        retirementAge={retirementAge}
+        language={language}
+      />
+
+      <FlexiblePayoutSimulator
+        isOpen={showPayoutSimulator}
+        onClose={() => setShowPayoutSimulator(false)}
+        portfolioValue={estimatedPortfolioValue}
+        payoutStartAge={retirementAge}
+        payoutEndAge={Math.min(retirementAge + 18, 85)}
+        language={language}
+      />
+    </>
   );
 };
 

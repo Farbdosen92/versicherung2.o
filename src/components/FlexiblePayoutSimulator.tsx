@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, TrendingDown, DollarSign, Info } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { Settings, TrendingDown, Info } from 'lucide-react';
+import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 import { calculateMonthlyPayoutAfterTax, TaxSettings, DEFAULT_TAX_SETTINGS } from '@/utils/germanTaxCalculations';
 import { Switch } from '@/components/ui/switch';
@@ -14,7 +14,6 @@ interface FlexiblePayoutSimulatorProps {
   isOpen: boolean;
   onClose: () => void;
   portfolioValue: number;
-  currentAge: number;
   payoutStartAge: number;
   payoutEndAge: number;
   language?: 'de' | 'en';
@@ -35,7 +34,6 @@ export const FlexiblePayoutSimulator: React.FC<FlexiblePayoutSimulatorProps> = (
   isOpen,
   onClose,
   portfolioValue,
-  currentAge,
   payoutStartAge,
   payoutEndAge,
   language = 'de'

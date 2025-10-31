@@ -3,12 +3,9 @@ import { motion } from 'framer-motion';
 import {
   TrendingUp,
   TrendingDown,
-  DollarSign,
-  BarChart3,
   PieChart,
   ArrowRight,
   Star,
-  Info,
   Filter,
   Search,
   Download,
@@ -34,8 +31,6 @@ import { cn } from '@/lib/utils';
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -65,8 +60,6 @@ interface Fund {
 export const PremiumFunds: React.FC<PremiumFundsProps> = ({ language = 'de' }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
-
   const texts = {
     de: {
       title: 'Fondsanalyse',
@@ -341,6 +334,67 @@ export const PremiumFunds: React.FC<PremiumFundsProps> = ({ language = 'de' }) =
       </section>
 
       <div className="container mx-auto px-4 lg:px-8 py-12">
+        <Card className="glass-card mb-10">
+          <CardHeader>
+            <CardTitle>{language === 'de' ? 'Debeka Global Shares & Fondspolice' : 'Debeka Global Shares & insurance wrapper'}</CardTitle>
+            <CardDescription>
+              {language === 'de'
+                ? 'Kernaussagen aus KID CA6I 0-100 und regulatorischem Rahmen (Stand 2025)'
+                : 'Key facts from KID CA6I 0-100 and regulatory framework (as of 2025)'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-muted-foreground">
+            <ul className="list-disc list-inside space-y-2">
+              <li>{language === 'de'
+                ? 'Interner Debeka-Fonds gem. VAG §124; ESG-Selektionsprozess, Regionen Europa/Nordamerika/Asien'
+                : 'Internal Debeka fund under VAG §124; ESG selection across Europe/NA/Asia'}</li>
+              <li>{language === 'de'
+                ? 'Tarife Chance Invest / Balance / Garant: individuelle 0/50/100%-Garantiewahl, Überschüsse 2024: 2,25%'
+                : 'Chance Invest / Balance / Garant tariff: customise guarantee (0/50/100%), 2024 surplus 2.25%'}</li>
+              <li>{language === 'de'
+                ? 'Kosten laut KID: 2,5% Einstieg über 5 Jahre (eingepreist), 0,3% p.a. laufend + 12 € Stückkosten'
+                : 'KID costs: 2.5% entry (spread 5 years), 0.3% p.a. ongoing + €12 policy fee'}</li>
+              <li>{language === 'de'
+                ? 'Ansparphase steuerfrei; Auszahlung über Ertragsanteil (z. B. 17% bei Start mit 67) oder Halbeinkünfte 12/62'
+                : 'Accumulation tax-free; payout via earnings portion (e.g. 17% at 67) or half-income 12/62 rule'}</li>
+            </ul>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">
+                  {language === 'de' ? 'Teilfreistellung & Vorabpauschale' : 'Partial exemption & advance lump sum'}
+                </h4>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="rounded-lg border border-border/50 p-3 bg-muted/40">
+                    <p className="font-semibold text-foreground">
+                      {language === 'de' ? 'Aktienfonds' : 'Equity funds'}
+                    </p>
+                    <p>30% {language === 'de' ? 'Teilfreistellung' : 'partial exemption'}</p>
+                  </div>
+                  <div className="rounded-lg border border-border/50 p-3 bg-muted/40">
+                    <p className="font-semibold text-foreground">
+                      {language === 'de' ? 'Mischfonds' : 'Mixed funds'}
+                    </p>
+                    <p>15% {language === 'de' ? 'Teilfreistellung' : 'partial exemption'}</p>
+                  </div>
+                  <div className="rounded-lg border border-border/50 p-3 bg-muted/40 col-span-2">
+                    <p className="font-semibold text-foreground">
+                      {language === 'de' ? 'Vorabpauschale 2025' : 'Advance lump sum 2025'}
+                    </p>
+                    <p>Basiszins 2,53% (BMF, 21.12.2024)</p>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-lg border border-border/50 p-3 bg-muted/40">
+                <p>
+                  {language === 'de'
+                    ? 'Hinweis: Historische Wertentwicklungen sind keine verlässlichen Indikatoren für zukünftige Ergebnisse.'
+                    : 'Note: Historical performance is not a reliable indicator of future results.'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Search and Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

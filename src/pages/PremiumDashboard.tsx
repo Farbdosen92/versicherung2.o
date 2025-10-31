@@ -24,8 +24,16 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { useOnboardingStore } from '@/stores/onboardingStore';
+import {
+  AllPensionComparison,
+  CostImpactWaterfall,
+  FundSavingsPlanComparison,
+  FlexiblePayoutSimulator,
+  PensionGapCard,
+  TaxCockpit,
+} from '@/components/pension';
 
 interface PremiumDashboardProps {
   language?: 'de' | 'en';
@@ -33,6 +41,41 @@ interface PremiumDashboardProps {
 
 export const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ language = 'de' }) => {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const { data } = useOnboardingStore();
+  const [showFundComparison, setShowFundComparison] = useState(false);
+  const [showPayoutSimulator, setShowPayoutSimulator] = useState(false);
+
+  const scopeBoth = data.personal?.maritalStatus === 'verheiratet' && data.personal?.calcScope === 'beide_personen';
+  const netMonthlyIncome = scopeBoth
+    ? (data.income.netMonthly_A || 0) + (data.income.netMonthly_B || 0)
+    : data.income.netMonthly || 0;
+
+  const currentAge = data.personal?.age
+    ? data.personal.age
+    : data.personal?.birthYear
+      ? new Date().getFullYear() - data.personal.birthYear
+      : 35;
+
+  const privateContribution = scopeBoth
+    ? (data.privatePension.contribution_A || 0) + (data.privatePension.contribution_B || 0)
+    : data.privatePension.contribution || 0;
+
+  const fundBalance = scopeBoth
+    ? (data.funds.balance_A || 0) + (data.funds.balance_B || 0)
+    : data.funds.balance || 0;
+
+  const retirementAge = 67;
+
+  const estimatedPortfolioValue = (() => {
+    if (fundBalance && fundBalance > 0) return fundBalance;
+    if (privateContribution && privateContribution > 0) {
+      const years = Math.max(0, retirementAge - currentAge);
+      const annual = privateContribution * 12;
+      const assumedReturn = 0.05;
+      return annual * (Math.pow(1 + assumedReturn, years) - 1) / assumedReturn;
+    }
+    return 25000;
+  })();
 
   const texts = {
     de: {
@@ -188,7 +231,8 @@ export const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ language = '
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/20">
+    <>
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/20">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="container mx-auto px-4 lg:px-8 pt-16 pb-24">
@@ -397,6 +441,110 @@ export const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ language = '
           </div>
         </motion.section>
 
+        {/* Retirement Intelligence */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.6 }}
+          className="mb-16 space-y-12"
+        >
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <PensionGapCard language={language} retirementAge={retirementAge} />
+            <TaxCockpit
+              language={language}
+              currentAgeOverride={currentAge}
+              retirementAgeOverride={retirementAge}
+              monthlyContributionOverride={privateContribution || undefined}
+              fundBalanceOverride={fundBalance || undefined}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {language === 'de' ? 'Produkt- & Rechtsfundament' : 'Product & Legal Foundation'}
+                </CardTitle>
+                <CardDescription>
+                  {language === 'de'
+                    ? 'Debeka Global Shares & private Rentenpolice gemäß VAG §124'
+                    : 'Debeka Global Shares & private pension policy under German VAG §124'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <ul className="list-disc list-inside space-y-2">
+                  <li>{language === 'de'
+                    ? 'Chance Invest / Balance / Garant – individuelle Garantie-/Fonds-Mischung'
+                    : 'Chance Invest / Balance / Garant – flexible guarantee vs. fund mix'}</li>
+                  <li>{language === 'de'
+                    ? 'Ansparphase steuerfrei, in der Rentenphase Ertragsanteil bzw. 12/62-Regel'
+                    : 'Tax deferred in accumulation, earnings portion or 12/62 in payout'}</li>
+                  <li>{language === 'de'
+                    ? 'KID CA6I: 2,5% Einstiegskosten (über 5 Jahre), 0,3% p.a. laufende Kosten, RIY ≈ 1,0%'
+                    : 'KID CA6I: 2.5% entry cost (over 5 years), 0.3% p.a. running cost, RIY ≈ 1.0%'}</li>
+                  <li>{language === 'de'
+                    ? 'Fundierte ESG-Ausrichtung, BaFin-reguliert, historische Performance kein Garant'
+                    : 'ESG aligned, BaFin supervised; historic performance not a guarantee'}</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {language === 'de' ? 'Problem → Mechanik → Lösung' : 'Problem → Mechanics → Solution'}
+                </CardTitle>
+                <CardDescription>
+                  {language === 'de'
+                    ? 'Transparente Darstellung ohne Emotionalisierung'
+                    : 'Transparent storytelling without emotional framing'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <ul className="list-disc list-inside space-y-2">
+                  <li>{language === 'de'
+                    ? 'Problem: Netto-Einkommen heute vs. Netto-Rentenströme ab Rentenbeginn → Versorgungslücke'
+                    : 'Problem: Today’s net income vs. net pension flows in retirement → gap'}</li>
+                  <li>{language === 'de'
+                    ? 'Mechanik: Vollständige Nachsteuerlogik inkl. Vorabpauschale, Teilfreistellung, 12/62'
+                    : 'Mechanics: Full after-tax logic incl. lump sum, partial exemption, 12/62'}</li>
+                  <li>{language === 'de'
+                    ? 'Lösung: Szenarien GRV / ETF / Debeka / Kombination inklusive Sensitivitäten'
+                    : 'Solution: Scenarios GRV / ETF / Debeka / combination with sensitivities'}</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-8">
+            <AllPensionComparison
+              language={language}
+              currentAge={currentAge}
+              netMonthlyIncome={netMonthlyIncome || 0}
+              privatePensionMonthly={privateContribution || 0}
+              retirementAge={retirementAge}
+            />
+
+            <div className="flex flex-col md:flex-row gap-4 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowFundComparison(true)}
+              >
+                {language === 'de' ? 'Fonds vs. Police' : 'Fund vs. Insurance'}
+              </Button>
+              <Button onClick={() => setShowPayoutSimulator(true)}>
+                {language === 'de' ? 'Flexible Entnahme simulieren' : 'Simulate flexible withdrawals'}
+              </Button>
+            </div>
+
+            <CostImpactWaterfall
+              language={language}
+              monthlyContribution={privateContribution || 300}
+              contractYears={Math.max(12, retirementAge - currentAge)}
+            />
+          </div>
+        </motion.section>
+
         {/* Call to Action */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -433,6 +581,25 @@ export const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ language = '
         </motion.section>
       </div>
     </div>
+
+      <FundSavingsPlanComparison
+        isOpen={showFundComparison}
+        onClose={() => setShowFundComparison(false)}
+        monthlyContribution={privateContribution || 300}
+        currentAge={currentAge}
+        retirementAge={retirementAge}
+        language={language}
+      />
+
+      <FlexiblePayoutSimulator
+        isOpen={showPayoutSimulator}
+        onClose={() => setShowPayoutSimulator(false)}
+        portfolioValue={estimatedPortfolioValue}
+        payoutStartAge={retirementAge}
+        payoutEndAge={Math.min(retirementAge + 18, 85)}
+        language={language}
+      />
+    </>
   );
 };
 

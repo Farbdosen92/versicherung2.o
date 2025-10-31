@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import TaxCalculator from '@/components/TaxCalculator';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calculator, TrendingUp, Shield, PiggyBank } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TrendingUp, Shield, PiggyBank } from 'lucide-react';
 import {
   CAPITAL_GAINS_TAX_RATE_PERCENT,
-  GOVERNMENT_PARAMETERS_2024,
+  GOVERNMENT_PARAMETERS_2025,
 } from '@/data/governmentParameters';
+import { TaxCockpit } from '@/components/pension';
 
 const TaxCalculatorPage: React.FC = () => {
-  const [language, setLanguage] = useState<'de' | 'en'>('de');
+  const [language] = useState<'de' | 'en'>('de');
+  const taxYear = GOVERNMENT_PARAMETERS_2025.tax.year;
 
-  const ruerupMaxFormattedDE = GOVERNMENT_PARAMETERS_2024.tax.ruerupMaxContribution.toLocaleString('de-DE');
-  const ruerupMaxFormattedEN = GOVERNMENT_PARAMETERS_2024.tax.ruerupMaxContribution.toLocaleString('en-US');
-  const ruerupDeductiblePercent = Math.round(GOVERNMENT_PARAMETERS_2024.tax.ruerupDeductibleRate * 100);
+  const ruerupMaxFormattedDE = GOVERNMENT_PARAMETERS_2025.tax.ruerupMaxContribution.toLocaleString('de-DE');
+  const ruerupMaxFormattedEN = GOVERNMENT_PARAMETERS_2025.tax.ruerupMaxContribution.toLocaleString('en-US');
+  const ruerupDeductiblePercent = Math.round(GOVERNMENT_PARAMETERS_2025.tax.ruerupDeductibleRate * 100);
   const capitalGainsPercentDE = CAPITAL_GAINS_TAX_RATE_PERCENT.toLocaleString('de-DE', {
     minimumFractionDigits: 3,
     maximumFractionDigits: 3,
@@ -32,7 +34,7 @@ const TaxCalculatorPage: React.FC = () => {
           {
             icon: Shield,
             title: 'Sonderausgabenabzug',
-            description: `Bis zu ${ruerupMaxFormattedDE}€ (2024) können als Sonderausgaben abgesetzt werden – ${ruerupDeductiblePercent}% absetzbar, 100% ab 2025`
+            description: `Bis zu ${ruerupMaxFormattedDE}€ (${taxYear}) können als Sonderausgaben abgesetzt werden – ${ruerupDeductiblePercent}% absetzbar, 100% ab 2025`
           },
           {
             icon: TrendingUp,
@@ -66,7 +68,7 @@ const TaxCalculatorPage: React.FC = () => {
           {
             icon: Shield,
             title: 'Special Expense Deduction',
-            description: `Up to €${ruerupMaxFormattedEN} (2024) can be deducted as special expenses – ${ruerupDeductiblePercent}% deductible, 100% from 2025`
+            description: `Up to €${ruerupMaxFormattedEN} (${taxYear}) can be deducted as special expenses – ${ruerupDeductiblePercent}% deductible, 100% from 2025`
           },
           {
             icon: TrendingUp,
@@ -149,6 +151,11 @@ const TaxCalculatorPage: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Tax Cockpit */}
+        <div className="mt-10">
+          <TaxCockpit language={language} />
         </div>
 
         {/* Tax Calculator Component */}

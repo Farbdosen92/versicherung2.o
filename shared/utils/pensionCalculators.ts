@@ -10,7 +10,7 @@
  * Tolerance: ±0.01 EUR for monetary values
  */
 
-import { GOVERNMENT_PARAMETERS_2024 } from '@/data/governmentParameters';
+import { GOVERNMENT_PARAMETERS_2025 } from '@/data/governmentParameters';
 
 // ============================================================================
 // RIESTER PENSION CALCULATOR (§10a, §79ff EStG)
@@ -258,7 +258,7 @@ export function calculateRuerupTaxSavings(input: RuerupInput): RuerupResult {
   } = input;
 
   // Get year-specific parameters
-  const maxContribution = GOVERNMENT_PARAMETERS_2024.tax.ruerupMaxContribution; // 27,566 for 2024
+  const maxContribution = GOVERNMENT_PARAMETERS_2025.tax.ruerupMaxContribution; // 27,566 for 2024
   const deductibleRate = getRuerupDeductibleRate(year);
 
   // Calculate deductible amount (capped at max contribution)

@@ -8,11 +8,9 @@ import {
   DollarSign,
   Calendar,
   Percent,
-  Info,
   Download,
   Share2,
   Sparkles,
-  AlertCircle,
 } from 'lucide-react';
 import {
   Card,
@@ -25,29 +23,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+  TaxCockpit,
+  CostImpactWaterfall,
+  FundSavingsPlanComparison,
+  FlexiblePayoutSimulator,
+  PensionGapCard,
+} from '@/components/pension';
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
 
 interface PremiumCalculatorProps {
@@ -68,6 +59,8 @@ export const PremiumCalculator: React.FC<PremiumCalculatorProps> = ({ language =
   const [activeTab, setActiveTab] = useState('private-pension');
   const [isCalculating, setIsCalculating] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [showFundComparison, setShowFundComparison] = useState(false);
+  const [showPayoutSimulator, setShowPayoutSimulator] = useState(false);
 
   const [inputs, setInputs] = useState<CalculatorInputs>({
     currentAge: 35,
@@ -95,6 +88,13 @@ export const PremiumCalculator: React.FC<PremiumCalculatorProps> = ({ language =
       setShowResults(true); // Auto-show results if data is available
     }
   }, [onboardingData, isCompleted]);
+
+  const scopeBoth = onboardingData.personal?.maritalStatus === 'verheiratet' &&
+    onboardingData.personal?.calcScope === 'beide_personen';
+
+  const onboardingFundBalance = scopeBoth
+    ? (onboardingData.funds.balance_A || 0) + (onboardingData.funds.balance_B || 0)
+    : onboardingData.funds.balance || 0;
 
   const texts = {
     de: {
@@ -247,7 +247,7 @@ export const PremiumCalculator: React.FC<PremiumCalculatorProps> = ({ language =
     subtitle,
     color
   }: {
-    icon: any;
+    icon: React.ElementType;
     label: string;
     value: string;
     subtitle?: string;
@@ -282,7 +282,8 @@ export const PremiumCalculator: React.FC<PremiumCalculatorProps> = ({ language =
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/20">
+    <>
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/20">
       {/* Hero Section */}
       <section className="relative overflow-hidden border-b border-border/30">
         <div className="container mx-auto px-4 lg:px-8 py-16">
@@ -587,6 +588,34 @@ export const PremiumCalculator: React.FC<PremiumCalculatorProps> = ({ language =
                       </ResponsiveContainer>
                     </CardContent>
                   </Card>
+
+                  <div className="space-y-8">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                      <PensionGapCard language={language} retirementAge={inputs.retirementAge} />
+                      <TaxCockpit
+                        language={language}
+                        currentAgeOverride={inputs.currentAge}
+                        retirementAgeOverride={inputs.retirementAge}
+                        monthlyContributionOverride={inputs.monthlyContribution}
+                        fundBalanceOverride={onboardingFundBalance || inputs.startCapital}
+                      />
+                    </div>
+
+                    <div className="flex flex-col md:flex-row gap-4 justify-end">
+                      <Button variant="outline" onClick={() => setShowFundComparison(true)}>
+                        {language === 'de' ? 'Fonds vs. Police' : 'Fund vs. Insurance'}
+                      </Button>
+                      <Button onClick={() => setShowPayoutSimulator(true)}>
+                        {language === 'de' ? 'Flexible Entnahme simulieren' : 'Simulate flexible withdrawals'}
+                      </Button>
+                    </div>
+
+                    <CostImpactWaterfall
+                      language={language}
+                      monthlyContribution={inputs.monthlyContribution}
+                      contractYears={Math.max(12, inputs.retirementAge - inputs.currentAge)}
+                    />
+                  </div>
                 </motion.div>
               ) : (
                 <motion.div
@@ -616,6 +645,24 @@ export const PremiumCalculator: React.FC<PremiumCalculatorProps> = ({ language =
         </div>
       </div>
     </div>
+      <FundSavingsPlanComparison
+        isOpen={showFundComparison}
+        onClose={() => setShowFundComparison(false)}
+        monthlyContribution={inputs.monthlyContribution}
+        currentAge={inputs.currentAge}
+        retirementAge={inputs.retirementAge}
+        language={language}
+      />
+
+      <FlexiblePayoutSimulator
+        isOpen={showPayoutSimulator}
+        onClose={() => setShowPayoutSimulator(false)}
+        portfolioValue={finalCapital || inputs.startCapital}
+        payoutStartAge={inputs.retirementAge}
+        payoutEndAge={Math.min(inputs.retirementAge + 18, 85)}
+        language={language}
+      />
+    </>
   );
 };
 

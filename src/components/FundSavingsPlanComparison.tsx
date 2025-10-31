@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,11 +11,11 @@ import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
 import { formatCurrency } from '@/lib/utils';
 import {
   calculateVorabpauschale,
-  calculateFundTax,
   getEffectiveTaxRate,
   DEFAULT_TAX_SETTINGS,
   TaxSettings
 } from '@/utils/germanTaxCalculations';
+import { PARTIAL_EXEMPTION_RATES } from '@/data/governmentParameters';
 
 interface FundSavingsPlanComparisonProps {
   isOpen: boolean;
@@ -64,7 +65,14 @@ export const FundSavingsPlanComparison: React.FC<FundSavingsPlanComparisonProps>
     policyFee: 0.4 // % p.a.
   });
 
-  const [taxSettings] = useState<TaxSettings>(DEFAULT_TAX_SETTINGS);
+  const [fundType, setFundType] = useState<'equity' | 'mixed' | 'other'>('equity');
+  const [allowanceValue, setAllowanceValue] = useState(DEFAULT_TAX_SETTINGS.allowance);
+
+  const taxSettings = useMemo<TaxSettings>(() => ({
+    ...DEFAULT_TAX_SETTINGS,
+    allowance: allowanceValue,
+    partialExemption: PARTIAL_EXEMPTION_RATES[fundType],
+  }), [allowanceValue, fundType]);
 
   // Simulation calculation
   const simulationData = useMemo((): SimulationPoint[] => {
@@ -101,7 +109,6 @@ export const FundSavingsPlanComparison: React.FC<FundSavingsPlanComparisonProps>
         fundValue -= managementFee;
 
         // Vorabpauschale (annual tax on unrealized gains)
-        const basiszins = taxSettings.baseRate / 100;
         const actualGains = fundValue - fundContributionsTotal;
         const vorabpauschale = calculateVorabpauschale(
           fundValue,
@@ -193,6 +200,14 @@ export const FundSavingsPlanComparison: React.FC<FundSavingsPlanComparisonProps>
       frontLoad: 'Ausgabeaufschlag',
       managementFee: 'Jährliche Verwaltungsgebühr',
       policyFee: 'Policengebühr',
+      taxSettings: 'Steuer-Einstellungen',
+      fundTypeLabel: 'Fondsart',
+      allowance: 'Freistellungsauftrag (€ / Jahr)',
+      fundTypeOptions: {
+        equity: 'Aktienfonds (30%)',
+        mixed: 'Mischfonds (15%)',
+        other: 'Sonstige (0%)'
+      },
       valueAt67: 'Wert mit 67',
       valueAt85: 'Wert mit 85',
       afterTax: 'Nach Steuern',
@@ -214,6 +229,14 @@ export const FundSavingsPlanComparison: React.FC<FundSavingsPlanComparisonProps>
       frontLoad: 'Front Load',
       managementFee: 'Annual Management Fee',
       policyFee: 'Policy Fee',
+      taxSettings: 'Tax settings',
+      fundTypeLabel: 'Fund type',
+      allowance: 'Saver allowance (€ / year)',
+      fundTypeOptions: {
+        equity: 'Equity fund (30%)',
+        mixed: 'Mixed fund (15%)',
+        other: 'Other (0%)'
+      },
       valueAt67: 'Value at 67',
       valueAt85: 'Value at 85',
       afterTax: 'After Tax',
@@ -258,7 +281,7 @@ export const FundSavingsPlanComparison: React.FC<FundSavingsPlanComparisonProps>
             </CardHeader>
             {showSettings && (
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Fondsparrplan Settings */}
                   <div className="space-y-4 p-4 bg-blue-50 rounded-lg">
                     <h4 className="font-semibold text-blue-900">{t.fundPlan}</h4>
@@ -342,6 +365,40 @@ export const FundSavingsPlanComparison: React.FC<FundSavingsPlanComparisonProps>
                           }))}
                         />
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Tax Settings */}
+                  <div className="space-y-4 p-4 bg-orange-50 rounded-lg">
+                    <h4 className="font-semibold text-orange-900">{t.taxSettings}</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <Label>{t.fundTypeLabel}</Label>
+                        <Select value={fundType} onValueChange={(value) => setFundType(value as 'equity' | 'mixed' | 'other')}>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t.fundTypeLabel} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="equity">{t.fundTypeOptions.equity}</SelectItem>
+                            <SelectItem value="mixed">{t.fundTypeOptions.mixed}</SelectItem>
+                            <SelectItem value="other">{t.fundTypeOptions.other}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>{t.allowance}</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={allowanceValue}
+                          onChange={(e) => setAllowanceValue(Number(e.target.value) || 0)}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {language === 'de'
+                          ? `Teilfreistellung: ${(PARTIAL_EXEMPTION_RATES[fundType] * 100).toFixed(0)}%`
+                          : `Partial exemption: ${(PARTIAL_EXEMPTION_RATES[fundType] * 100).toFixed(0)}%`}
+                      </p>
                     </div>
                   </div>
                 </div>

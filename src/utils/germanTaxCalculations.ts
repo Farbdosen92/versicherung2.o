@@ -5,7 +5,7 @@
 
 import {
   CAPITAL_GAINS_TAX_RATE_PERCENT,
-  GOVERNMENT_PARAMETERS_2024,
+  GOVERNMENT_PARAMETERS_2025,
   PARTIAL_EXEMPTION_PERCENT,
 } from "@/data/governmentParameters";
 
@@ -308,14 +308,14 @@ export function calculateMonthlyPayoutAfterTax(
 }
 
 /**
- * Default German tax settings for 2024
+ * Default German tax settings for 2025
  */
 export const DEFAULT_TAX_SETTINGS: TaxSettings = {
   capitalGainsTaxRate: CAPITAL_GAINS_TAX_RATE_PERCENT,
-  churchTaxRate: GOVERNMENT_PARAMETERS_2024.tax.churchTaxDefaultRate * 100,
-  allowance: GOVERNMENT_PARAMETERS_2024.tax.sparerPauschbetragSingle,
-  baseRate: GOVERNMENT_PARAMETERS_2024.tax.vorabpauschaleBasiszins * 100,
+  churchTaxRate: GOVERNMENT_PARAMETERS_2025.tax.churchTaxDefaultRate * 100,
+  allowance: GOVERNMENT_PARAMETERS_2025.tax.sparerPauschbetragSingle,
+  baseRate: GOVERNMENT_PARAMETERS_2025.tax.vorabpauschaleBasiszins * 100,
   hasChurchTax: false,
   useHalfIncomeTaxation: false, // Halbeinkünfteverfahren ab 62
-  partialExemption: PARTIAL_EXEMPTION_PERCENT // 15% Teilfreistellung für Aktienfonds
+  partialExemption: PARTIAL_EXEMPTION_PERCENT // 30% Teilfreistellung für Aktienfonds
 };

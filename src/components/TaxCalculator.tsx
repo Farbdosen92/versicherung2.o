@@ -5,15 +5,15 @@ import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { Calculator, TrendingDown, TrendingUp, Info, DollarSign, PiggyBank, AlertCircle } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { Calculator, Info, PiggyBank } from 'lucide-react';
 import { calculateGermanTax, calculatePensionTaxSavings } from '@/utils/germanTaxCalculator';
+import { GOVERNMENT_PARAMETERS_2025 } from '@/data/governmentParameters';
 import { formatCurrency } from '@/lib/utils';
 
 const taxFormSchema = z.object({
@@ -36,6 +36,7 @@ interface TaxCalculatorProps {
 
 export const TaxCalculator: React.FC<TaxCalculatorProps> = ({ language = 'de', initialIncome = 60000 }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const taxYear = GOVERNMENT_PARAMETERS_2025.tax.year;
 
   const form = useForm<TaxFormData>({
     resolver: zodResolver(taxFormSchema),
@@ -108,7 +109,7 @@ export const TaxCalculator: React.FC<TaxCalculatorProps> = ({ language = 'de', i
 
   const texts = {
     de: {
-      title: 'Steuerrechner 2024',
+      title: `Steuerrechner ${taxYear}`,
       description: 'Berechnen Sie Ihre Einkommensteuer nach deutschem Steuerrecht',
       income: 'Bruttoeinkommen (Jahr)',
       maritalStatus: 'Familienstand',
@@ -139,7 +140,7 @@ export const TaxCalculator: React.FC<TaxCalculatorProps> = ({ language = 'de', i
       annually: '/Jahr',
     },
     en: {
-      title: 'Tax Calculator 2024',
+      title: `Tax Calculator ${taxYear}`,
       description: 'Calculate your income tax according to German tax law',
       income: 'Gross Income (Annual)',
       maritalStatus: 'Marital Status',
