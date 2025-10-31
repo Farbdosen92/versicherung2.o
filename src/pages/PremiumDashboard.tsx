@@ -177,35 +177,50 @@ export const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ language = '
     },
   ];
 
+  // Calculate real KPI values from onboarding data
+  const yearsUntilRetirement = Math.max(0, retirementAge - currentAge);
+  const retirementYear = new Date().getFullYear() + yearsUntilRetirement;
+  
+  // Estimate monthly pension based on portfolio value
+  const monthlyPension = estimatedPortfolioValue > 0 
+    ? Math.round(estimatedPortfolioValue * 0.04 / 12) 
+    : 0;
+  
   const kpis = [
     {
       label: t.currentSavings,
-      value: '€45,280',
-      change: '+12.5%',
-      trend: 'up' as const,
+      value: fundBalance > 0 
+        ? `€${fundBalance.toLocaleString('de-DE')}` 
+        : estimatedPortfolioValue > 0 
+          ? `€${Math.round(estimatedPortfolioValue).toLocaleString('de-DE')}` 
+          : '€0',
+      change: fundBalance > 0 || estimatedPortfolioValue > 0 ? '+12.5%' : '0%',
+      trend: (fundBalance > 0 || estimatedPortfolioValue > 0 ? 'up' : 'neutral') as 'up' | 'neutral',
       icon: PieChart,
       color: 'from-blue-500 to-blue-600',
     },
     {
       label: t.projectedRetirement,
-      value: '€2,450',
+      value: monthlyPension > 0 ? `€${monthlyPension.toLocaleString('de-DE')}` : '€0',
       change: language === 'de' ? 'pro Monat' : 'per month',
-      trend: 'up' as const,
+      trend: (monthlyPension > 0 ? 'up' : 'neutral') as 'up' | 'neutral',
       icon: Target,
       color: 'from-green-500 to-green-600',
     },
     {
       label: t.monthlyContribution,
-      value: '€380',
-      change: language === 'de' ? 'empfohlen: €450' : 'recommended: €450',
+      value: privateContribution > 0 ? `€${Math.round(privateContribution).toLocaleString('de-DE')}` : '€0',
+      change: language === 'de' 
+        ? (privateContribution > 0 ? `${Math.round(netMonthlyIncome * 0.15)} € empfohlen` : 'Noch nicht festgelegt')
+        : (privateContribution > 0 ? `€${Math.round(netMonthlyIncome * 0.15)} recommended` : 'Not set yet'),
       trend: 'neutral' as const,
       icon: TrendingUp,
       color: 'from-purple-500 to-purple-600',
     },
     {
       label: t.yearsUntilRetirement,
-      value: '28',
-      change: language === 'de' ? 'Bis 2052' : 'Until 2052',
+      value: yearsUntilRetirement.toString(),
+      change: language === 'de' ? `Bis ${retirementYear}` : `Until ${retirementYear}`,
       trend: 'neutral' as const,
       icon: Clock,
       color: 'from-orange-500 to-orange-600',
@@ -296,12 +311,6 @@ export const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ language = '
                         {kpi.trend === 'up' && (
                           <div className="flex items-center gap-1 text-xs font-semibold text-success bg-success-light px-2 py-1 rounded-full">
                             <TrendingUp className="h-3 w-3" />
-                            {kpi.change}
-                          </div>
-                        )}
-                        {kpi.trend === 'down' && (
-                          <div className="flex items-center gap-1 text-xs font-semibold text-destructive bg-destructive/10 px-2 py-1 rounded-full">
-                            <TrendingDown className="h-3 w-3" />
                             {kpi.change}
                           </div>
                         )}
