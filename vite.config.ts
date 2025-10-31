@@ -12,12 +12,8 @@ function resolveBase(mode: string): string {
     return explicitBase.endsWith("/") ? explicitBase : `${explicitBase}/`;
   }
 
-  // For GitHub Pages, use repository name as base
-  // This will be overridden by VITE_BASE_PATH in GitHub Actions
-  if (mode === "production") {
-    return "/versicherung2.o/";
-  }
-
+  // Default for local development and production builds without explicit base
+  // GitHub Actions will always set VITE_BASE_PATH="/${{github.event.repository.name}}/"
   return "/";
 }
 
