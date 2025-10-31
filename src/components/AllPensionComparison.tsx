@@ -5,6 +5,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { formatCurrency } from '@/lib/utils';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { Shield, TrendingUp } from 'lucide-react';
+import { projectPrivatePension, qualifiesFor1262 } from '@/lib/retirementMath';
 
 interface AllPensionComparisonProps {
   language?: 'de' | 'en';
@@ -43,6 +44,20 @@ export const AllPensionComparison: React.FC<AllPensionComparisonProps> = ({
     // Check if married and calculating for both
     const isMarriedBoth = data.personal?.maritalStatus === 'verheiratet' && data.personal?.calcScope === 'beide_personen';
 
+    // Calculate private pension based on monthly contribution
+    const contractYears = Math.max(0, retirementAge - currentAge);
+    let calculatedPrivatePension = 0;
+    
+    if (privatePensionMonthly > 0 && contractYears > 0) {
+      const projection = projectPrivatePension({
+        monthlyContribution: privatePensionMonthly,
+        years: contractYears,
+        retirementAge,
+        useHalfIncomeTaxation: qualifiesFor1262(retirementAge, contractYears),
+      });
+      calculatedPrivatePension = projection.netMonthly;
+    }
+
     return {
       gesetzlicheRente: isMarriedBoth
         ? (pensions.public67_A || 0) + (pensions.public67_B || 0)
@@ -59,12 +74,12 @@ export const AllPensionComparison: React.FC<AllPensionComparisonProps> = ({
       riester: isMarriedBoth
         ? (riester.amount_A || 0) + (riester.amount_B || 0)
         : (riester.amount || 0),
-      privatePension: privatePensionMonthly,
+      privatePension: calculatedPrivatePension,
       privateContribution: isMarriedBoth
         ? (privatePension.contribution_A || 0) + (privatePension.contribution_B || 0)
         : (privatePension.contribution || 0)
     };
-  }, [data, privatePensionMonthly]);
+  }, [data, privatePensionMonthly, currentAge, retirementAge]);
 
   // Calculate total statutory pension
   const totalStatutoryPension = useMemo(() => {

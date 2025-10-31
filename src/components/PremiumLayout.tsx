@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'wouter';
 import PremiumHeader from './PremiumHeader';
 import PremiumOnboardingWizard from './onboarding/PremiumOnboardingWizard';
 import { useOnboardingStore } from '@/stores/onboardingStore';
@@ -132,24 +133,24 @@ export const PremiumLayout: React.FC<PremiumLayoutProps> = ({
               </h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <a href="/" className="hover:text-primary transition-colors duration-200">
+                  <Link href="/" className="hover:text-primary transition-colors duration-200">
                     Dashboard
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/calculator" className="hover:text-primary transition-colors duration-200">
+                  <Link href="/calculator" className="hover:text-primary transition-colors duration-200">
                     {language === 'de' ? 'Rechner' : 'Calculator'}
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/vergleich" className="hover:text-primary transition-colors duration-200">
+                  <Link href="/vergleich" className="hover:text-primary transition-colors duration-200">
                     {language === 'de' ? 'Vergleich' : 'Comparison'}
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/fonds" className="hover:text-primary transition-colors duration-200">
+                  <Link href="/fonds" className="hover:text-primary transition-colors duration-200">
                     {language === 'de' ? 'Fonds' : 'Funds'}
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -161,19 +162,19 @@ export const PremiumLayout: React.FC<PremiumLayoutProps> = ({
               </h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <a href="/impressum" className="hover:text-primary transition-colors duration-200">
+                  <Link href="/impressum" className="hover:text-primary transition-colors duration-200">
                     Impressum
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/datenschutz" className="hover:text-primary transition-colors duration-200">
+                  <Link href="/datenschutz" className="hover:text-primary transition-colors duration-200">
                     {language === 'de' ? 'Datenschutz' : 'Privacy Policy'}
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/agb" className="hover:text-primary transition-colors duration-200">
+                  <Link href="/agb" className="hover:text-primary transition-colors duration-200">
                     AGB
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>

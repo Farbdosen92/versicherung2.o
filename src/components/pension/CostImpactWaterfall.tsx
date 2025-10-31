@@ -11,6 +11,7 @@ import {
   Legend,
   Bar,
 } from 'recharts';
+import { AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { calculateCostImpact } from '@/lib/retirementMath';
 
@@ -53,6 +54,7 @@ export const CostImpactWaterfall: React.FC<CostImpactWaterfallProps> = ({
       totalCosts: 'Gesamte Kostenbelastung',
       netAssets: 'Netto-Vermögen',
       contribution: 'Gesamtbeitrag',
+      noContributionWarning: 'Bitte geben Sie eine monatliche Einzahlung größer als 0 € an, um die Kostenwirkung zu berechnen.',
     },
     en: {
       title: 'Cost impact over contract term',
@@ -66,6 +68,7 @@ export const CostImpactWaterfall: React.FC<CostImpactWaterfallProps> = ({
       totalCosts: 'Total cost impact',
       netAssets: 'Net assets',
       contribution: 'Total contribution',
+      noContributionWarning: 'Please enter a monthly contribution greater than €0 to calculate the cost impact.',
     },
   };
 
@@ -73,13 +76,23 @@ export const CostImpactWaterfall: React.FC<CostImpactWaterfallProps> = ({
 
   const tooltipFormatter = (value: number) => formatCurrency(value);
 
+  // Validation: Check if monthly contribution is too low
+  const isValidContribution = monthlyContribution > 0;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t.title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Tabs defaultValue="chart">
+        {!isValidContribution ? (
+          <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-amber-800">{t.noContributionWarning}</p>
+          </div>
+        ) : (
+          <>
+            <Tabs defaultValue="chart">
           <TabsList>
             <TabsTrigger value="chart">Chart</TabsTrigger>
             <TabsTrigger value="table">Details</TabsTrigger>
@@ -171,6 +184,8 @@ export const CostImpactWaterfall: React.FC<CostImpactWaterfallProps> = ({
             </div>
           </div>
         </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
