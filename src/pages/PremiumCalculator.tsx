@@ -24,6 +24,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
   TaxCockpit,
   CostImpactWaterfall,
@@ -39,6 +41,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from 'recharts';
 
 interface PremiumCalculatorProps {
@@ -78,12 +81,17 @@ export const PremiumCalculator: React.FC<PremiumCalculatorProps> = ({ language =
       const birthYear = onboardingData.personal?.birthYear;
       const currentAge = birthYear ? currentYear - birthYear : 35;
 
+      const scopeBoth = onboardingData?.personal?.maritalStatus === 'verheiratet' &&
+        onboardingData?.personal?.calcScope === 'beide_personen';
+      
+      const contribution = scopeBoth
+        ? ((onboardingData?.privatePension?.contribution_A || 0) + (onboardingData?.privatePension?.contribution_B || 0))
+        : (onboardingData?.privatePension?.contribution || 0);
+
       setInputs(prev => ({
         ...prev,
         currentAge,
-        monthlyContribution: onboardingData.privatePension?.monthlyContribution || prev.monthlyContribution,
-        startCapital: onboardingData.privatePension?.startInvestment || prev.startCapital,
-        expectedReturn: onboardingData.privatePension?.expectedReturn || prev.expectedReturn,
+        monthlyContribution: contribution || prev.monthlyContribution,
       }));
       setShowResults(true); // Auto-show results if data is available
     }
