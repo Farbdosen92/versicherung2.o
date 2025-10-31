@@ -16,6 +16,8 @@ import {
   TaxSettings
 } from '@/utils/germanTaxCalculations';
 import { PARTIAL_EXEMPTION_RATES } from '@/data/governmentParameters';
+import { useOnboardingStore } from '@/stores/onboardingStore';
+import { getSparerPauschbetrag } from '@/utils/taxHelpers';
 
 interface FundSavingsPlanComparisonProps {
   isOpen: boolean;
@@ -49,6 +51,11 @@ export const FundSavingsPlanComparison: React.FC<FundSavingsPlanComparisonProps>
   retirementAge,
   language = 'de'
 }) => {
+  const { data: onboardingData } = useOnboardingStore();
+
+  // Get default allowance from onboarding data
+  const defaultAllowance = useMemo(() => getSparerPauschbetrag(onboardingData), [onboardingData]);
+
   const [showSettings, setShowSettings] = useState(false);
 
   // Fund Savings Plan parameters
@@ -66,7 +73,7 @@ export const FundSavingsPlanComparison: React.FC<FundSavingsPlanComparisonProps>
   });
 
   const [fundType, setFundType] = useState<'equity' | 'mixed' | 'other'>('equity');
-  const [allowanceValue, setAllowanceValue] = useState(DEFAULT_TAX_SETTINGS.allowance);
+  const [allowanceValue, setAllowanceValue] = useState(defaultAllowance);
 
   const taxSettings = useMemo<TaxSettings>(() => ({
     ...DEFAULT_TAX_SETTINGS,

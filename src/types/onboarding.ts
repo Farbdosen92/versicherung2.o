@@ -16,6 +16,13 @@ export interface PersonalData {
   calcScope?: CalcScope; // Only for married couples
 }
 
+export interface TaxSettings {
+  sparerPauschbetrag?: number; // Custom allowance, overrides default 1000/2000
+  churchTax?: boolean; // Applies church tax
+  churchTaxRate?: number; // 8% or 9%
+  solidarityTax?: boolean; // Applies solidarity surcharge
+}
+
 export interface IncomeData {
   netMonthly?: number; // Required, €/month
   grossAnnual?: number; // Optional, €/year
@@ -126,6 +133,7 @@ export interface OnboardingData {
   funds: FundsData;
   savings: SavingsData;
   mortgage: MortgageData;
+  taxSettings?: TaxSettings; // Optional tax configuration
   completedAt?: string;
 }
 

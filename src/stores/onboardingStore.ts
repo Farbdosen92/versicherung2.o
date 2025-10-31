@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { OnboardingData, WizardStep, PersonalData, IncomeData, PensionData, AssetData, MortgageData, OnboardingExportData, ValidationErrors, PrivatePensionData, RiesterData, RuerupData, OccupationalPensionData, LifeInsuranceData, FundsData, SavingsData, OtherIncomeData } from '../types/onboarding';
+import { OnboardingData, WizardStep, PersonalData, IncomeData, PensionData, AssetData, MortgageData, OnboardingExportData, ValidationErrors, PrivatePensionData, RiesterData, RuerupData, OccupationalPensionData, LifeInsuranceData, FundsData, SavingsData, OtherIncomeData, TaxSettings } from '../types/onboarding';
 import { OnboardingStorageService } from '../services/onboardingStorage';
 
 interface OnboardingStore {
@@ -40,6 +40,7 @@ interface OnboardingStore {
   updateFundsData: (data: Partial<FundsData>) => void;
   updateSavingsData: (data: Partial<SavingsData>) => void;
   updateMortgageData: (data: Partial<MortgageData>) => void;
+  updateTaxSettings: (data: Partial<TaxSettings>) => void;
   updateRetirementData: (data: { privatePension?: Partial<PrivatePensionData>; riester?: Partial<RiesterData>; ruerup?: Partial<RuerupData>; occupationalPension?: Partial<OccupationalPensionData> }) => void;
   updateAssetsData: (data: { lifeInsurance?: Partial<LifeInsuranceData>; funds?: Partial<FundsData>; savings?: Partial<SavingsData> }) => void;
   validateCurrentStep: () => boolean;
@@ -393,6 +394,19 @@ export const useOnboardingStore = create<OnboardingStore>((set, get) => ({
     const updatedData = {
       ...data,
       mortgage: { ...data.mortgage, ...newData }
+    };
+    
+    // Auto-save to storage
+    OnboardingStorageService.saveData(updatedData);
+    
+    set({ data: updatedData });
+  },
+
+  updateTaxSettings: (newData) => {
+    const { data } = get();
+    const updatedData = {
+      ...data,
+      taxSettings: { ...data.taxSettings, ...newData }
     };
     
     // Auto-save to storage

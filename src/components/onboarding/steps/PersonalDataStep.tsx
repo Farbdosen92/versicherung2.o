@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { useOnboardingStore } from '../../../stores/onboardingStore';
 import { MaritalStatus, CalcScope } from '../../../types/onboarding';
 import { calculateAge, calculateBirthYear } from '../../../utils/onboardingValidation';
-import { Users, Heart, Baby, User, Calendar, Calculator, Info, AlertCircle } from 'lucide-react';
+import { Users, Heart, Baby, User, Calendar, Calculator, Info, AlertCircle, Settings } from 'lucide-react';
 import EnhancedTooltip from '../../ui/enhanced-tooltip';
+import { getSparerPauschbetrag } from '../../../utils/taxHelpers';
 
 const PersonalDataStep: React.FC = () => {
-  const { data, updateData } = useOnboardingStore();
+  const { data, updateData, updateTaxSettings } = useOnboardingStore();
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [validationMessages, setValidationMessages] = useState<Record<string, string>>({});
+  const [showTaxSettings, setShowTaxSettings] = useState(false);
   
   const personal = data.personal || {
     birthYear: 0,
@@ -351,6 +353,70 @@ const PersonalDataStep: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Tax Settings (Optional) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-gray-900 flex items-center gap-2">
+            <Settings className="inline h-4 w-4" />
+            Steuereinstellungen (optional)
+          </label>
+          <button
+            type="button"
+            onClick={() => setShowTaxSettings(!showTaxSettings)}
+            className="text-sm text-blue-600 hover:text-blue-700"
+          >
+            {showTaxSettings ? 'Ausblenden' : 'Anpassen'}
+          </button>
+        </div>
+
+        {showTaxSettings && (
+          <div className="ml-6 space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                Sparer-Pauschbetrag
+                <EnhancedTooltip content="Betrag, bis zu dem Kapitalerträge steuerfrei bleiben. Standard: 1.000€ (Single) / 2.000€ (Verheiratet)" />
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  value={data.taxSettings?.sparerPauschbetrag ?? getSparerPauschbetrag(data)}
+                  onChange={(e) => updateTaxSettings({ sparerPauschbetrag: parseInt(e.target.value) || 0 })}
+                  className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={getSparerPauschbetrag(data).toString()}
+                />
+                <span className="text-sm text-gray-600">€</span>
+                <button
+                  type="button"
+                  onClick={() => updateTaxSettings({ sparerPauschbetrag: undefined })}
+                  className="text-xs text-gray-500 hover:text-gray-700 underline"
+                >
+                  Standard
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Standard: {getSparerPauschbetrag(data)}€ (basierend auf Familienstand)
+              </p>
+            </div>
+
+            <div>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={data.taxSettings?.churchTax ?? false}
+                  onChange={(e) => updateTaxSettings({ churchTax: e.target.checked })}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-900">
+                  Kirchensteuer berücksichtigen
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Info Box */}
