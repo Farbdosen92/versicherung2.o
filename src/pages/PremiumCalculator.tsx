@@ -79,7 +79,8 @@ export const PremiumCalculator: React.FC<PremiumCalculatorProps> = ({ language =
     if (isCompleted && onboardingData) {
       const currentYear = new Date().getFullYear();
       const birthYear = onboardingData.personal?.birthYear;
-      const currentAge = birthYear ? currentYear - birthYear : 35;
+      const age = onboardingData.personal?.age;
+      const currentAge = age || (birthYear ? currentYear - birthYear : 30); // Fallback: 30 Jahre
 
       const scopeBoth = onboardingData?.personal?.maritalStatus === 'verheiratet' &&
         onboardingData?.personal?.calcScope === 'beide_personen';

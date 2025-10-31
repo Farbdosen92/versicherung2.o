@@ -54,7 +54,7 @@ export const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ language = '
     ? data?.personal?.age
     : data?.personal?.birthYear
       ? new Date().getFullYear() - data?.personal?.birthYear
-      : 35;
+      : 30; // Fallback: 30 Jahre (typisches Einstiegsalter für Altersvorsorge)
 
   const privateContribution = scopeBoth
     ? ((data?.privatePension?.contribution_A || 0) + (data?.privatePension?.contribution_B || 0))
