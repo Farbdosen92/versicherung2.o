@@ -48,7 +48,7 @@ export const FlexiblePayoutSimulator: React.FC<FlexiblePayoutSimulatorProps> = (
     ...DEFAULT_TAX_SETTINGS,
     allowance: 1000, // Freistellungsauftrag default
     useHalfIncomeTaxation: false,
-    partialExemption: 0.15
+    partialExemption: 0.30 // 30% für Aktienfonds (§20 InvStG)
   });
 
   useEffect(() => {
@@ -136,7 +136,7 @@ export const FlexiblePayoutSimulator: React.FC<FlexiblePayoutSimulatorProps> = (
       settings: 'Einstellungen',
       allowance: 'Freistellungsauftrag',
       halfIncome: 'Halbeinkünfteverfahren ab 62',
-      partialExemption: 'Teilfreistellung (15%)',
+      partialExemption: 'Teilfreistellung (30%)',
       summary: 'Zusammenfassung',
       totalWithdrawn: 'Gesamte Entnahmen',
       totalTaxes: 'Gesamte Steuern',
@@ -145,7 +145,7 @@ export const FlexiblePayoutSimulator: React.FC<FlexiblePayoutSimulatorProps> = (
       finalValue: 'Restwert mit',
       chart: 'Vermögensentwicklung',
       infoTitle: 'Steuerberechnung',
-      infoText: 'Die Berechnung berücksichtigt Freistellungsauftrag, Teilfreistellung (15% auf Erträge) und optional das Halbeinkünfteverfahren ab 62 Jahren.'
+      infoText: 'Die Berechnung berücksichtigt Freistellungsauftrag, Teilfreistellung (30% auf Erträge für Aktienfonds) und optional das Halbeinkünfteverfahren ab 62 Jahren.'
     },
     en: {
       title: 'Flexible Payout Phase Simulator',
@@ -154,7 +154,7 @@ export const FlexiblePayoutSimulator: React.FC<FlexiblePayoutSimulatorProps> = (
       settings: 'Settings',
       allowance: 'Tax Allowance',
       halfIncome: 'Half-Income Taxation from 62',
-      partialExemption: 'Partial Exemption (15%)',
+      partialExemption: 'Partial Exemption (30%)',
       summary: 'Summary',
       totalWithdrawn: 'Total Withdrawals',
       totalTaxes: 'Total Taxes',
@@ -163,7 +163,7 @@ export const FlexiblePayoutSimulator: React.FC<FlexiblePayoutSimulatorProps> = (
       finalValue: 'Remaining Value at',
       chart: 'Portfolio Development',
       infoTitle: 'Tax Calculation',
-      infoText: 'The calculation considers tax allowance, partial exemption (15% on gains) and optionally half-income taxation from age 62.'
+      infoText: 'The calculation considers tax allowance, partial exemption (30% on gains for equity funds) and optionally half-income taxation from age 62.'
     }
   };
 

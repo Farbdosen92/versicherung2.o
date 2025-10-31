@@ -15,8 +15,9 @@ export interface TaxSettings {
   allowance: number; // Sparer-Pauschbetrag (Freistellungsauftrag)
   baseRate: number; // Basiszins für Vorabpauschale
   hasChurchTax: boolean;
-  useHalfIncomeTaxation?: boolean; // Halbeinkünfteverfahren ab 62
-  partialExemption?: number; // Teilfreistellung (default 15% für Fonds)
+  useHalfIncomeTaxation?: boolean; // Halbeinkünfteverfahren (nur wenn 12/62-Regel erfüllt)
+  partialExemption?: number; // Teilfreistellung (30% für Aktienfonds, 15% Mischfonds)
+  contractStartAge?: number; // Vertragsbegin-Alter (für 12/62-Regel)
 }
 
 export interface InvestmentData {
@@ -124,14 +125,34 @@ export function calculateFundTax(
 /**
  * Calculate Ertragsanteil for pension payments
  * The taxable portion of pension payments based on age when payments start
+ * According to §22 No. 1 Sentence 3 Letter a EStG (2024)
  */
 export function getErtragsanteil(ageAtPaymentStart: number): number {
-  // Simplified Ertragsanteil table (2024)
-  if (ageAtPaymentStart >= 67) return 17; // 17% taxable
-  if (ageAtPaymentStart >= 65) return 18; // 18% taxable
-  if (ageAtPaymentStart >= 63) return 19; // 19% taxable
-  if (ageAtPaymentStart >= 60) return 22; // 22% taxable
-  return 25; // 25% taxable for younger ages
+  // Vollständige Ertragsanteils-Tabelle gemäß §22 EStG
+  if (ageAtPaymentStart >= 68) return 17;
+  if (ageAtPaymentStart === 67) return 17;
+  if (ageAtPaymentStart === 66) return 18;
+  if (ageAtPaymentStart === 65) return 18;
+  if (ageAtPaymentStart === 64) return 19;
+  if (ageAtPaymentStart === 63) return 19;
+  if (ageAtPaymentStart === 62) return 20;
+  if (ageAtPaymentStart === 61) return 21;
+  if (ageAtPaymentStart === 60) return 22;
+  if (ageAtPaymentStart === 59) return 23;
+  if (ageAtPaymentStart === 58) return 24;
+  if (ageAtPaymentStart === 57) return 25;
+  if (ageAtPaymentStart === 56) return 26;
+  if (ageAtPaymentStart === 55) return 27;
+  if (ageAtPaymentStart === 54) return 28;
+  if (ageAtPaymentStart === 53) return 29;
+  if (ageAtPaymentStart === 52) return 30;
+  if (ageAtPaymentStart === 51) return 31;
+  if (ageAtPaymentStart === 50) return 32;
+  if (ageAtPaymentStart === 49) return 33;
+  if (ageAtPaymentStart === 48) return 34;
+  if (ageAtPaymentStart === 47) return 35;
+  if (ageAtPaymentStart <= 46) return 36; // 36% für Alter 0-46
+  return 17; // Default (sollte nie erreicht werden)
 }
 
 /**
@@ -191,16 +212,33 @@ export function calculateFinalSaleTax(
 }
 
 /**
+ * Check if 12/62 rule (§20 Abs. 1 Nr. 6 EStG) applies
+ * Requires BOTH conditions:
+ * - Contract duration of at least 12 years
+ * - Payout starting at age 62 or later
+ */
+export function qualifiesFor1262Rule(
+  contractStartAge: number,
+  payoutStartAge: number
+): boolean {
+  const contractDuration = payoutStartAge - contractStartAge;
+  return contractDuration >= 12 && payoutStartAge >= 62;
+}
+
+/**
  * Calculate tax with Halbeinkünfteverfahren (Half-Income Taxation) from age 62
- * Only 50% of income is taxable
+ * Only applies if 12/62 rule is met: 12 years duration AND payout from age 62+
+ * When qualified: Only 50% of GAINS (not total) are taxable
  */
 export function applyHalfIncomeTaxation(
   taxableIncome: number,
   age: number,
-  useHalfIncome: boolean = false
+  useHalfIncome: boolean = false,
+  contractStartAge?: number
 ): number {
-  if (useHalfIncome && age >= 62) {
-    return taxableIncome * 0.5; // Only 50% taxable
+  // Only apply if explicitly enabled AND 12/62 rule is met
+  if (useHalfIncome && contractStartAge && qualifiesFor1262Rule(contractStartAge, age)) {
+    return taxableIncome * 0.5; // Only 50% of gains taxable
   }
   return taxableIncome;
 }
@@ -250,11 +288,12 @@ export function calculatePayoutTax(
     partialExemptionRate
   );
 
-  // Step 2: Apply Halbeinkünfteverfahren if age >= 62
+  // Step 2: Apply Halbeinkünfteverfahren if 12/62 rule is met
   const afterHalfIncome = applyHalfIncomeTaxation(
     afterPartialExemption,
     age,
-    settings.useHalfIncomeTaxation
+    settings.useHalfIncomeTaxation,
+    settings.contractStartAge // Pass contract start age for 12/62 check
   );
 
   // Step 3: Apply Freistellungsauftrag (allowance)

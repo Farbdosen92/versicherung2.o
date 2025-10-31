@@ -53,16 +53,16 @@ export const FundSavingsPlanComparison: React.FC<FundSavingsPlanComparisonProps>
 
   // Fund Savings Plan parameters
   const [fundParams, setFundParams] = useState({
-    returnRate: 7.0, // % p.a.
-    frontLoad: 5.0, // % one-time
-    managementFee: 0.75 // % p.a. vom Guthaben
+    returnRate: 6.0, // % p.a. - Realistisch für langfristige Aktienrendite
+    frontLoad: 2.5, // % über 5 Jahre verteilt (Debeka KID)
+    managementFee: 0.30 // % p.a. vom Guthaben (Debeka Fondsgebühr)
   });
 
-  // Private Pension Insurance parameters
+  // Private Pension Insurance parameters (Debeka fondsgebundene RV)
   const [pensionParams, setPensionParams] = useState({
-    returnRate: 6.5, // % p.a.
-    managementFee: 1.0, // % p.a. vom Guthaben
-    policyFee: 0.4 // % p.a.
+    returnRate: 6.0, // % p.a. - Gleiche Annahme wie Fondssparplan
+    managementFee: 0.30, // % p.a. Fondsgebühr
+    policyFee: 0.4 // % p.a. Policengebühr (Debeka)
   });
 
   const [fundType, setFundType] = useState<'equity' | 'mixed' | 'other'>('equity');
@@ -95,7 +95,8 @@ export const FundSavingsPlanComparison: React.FC<FundSavingsPlanComparisonProps>
       if (isAccumulationPhase) {
         // ===== FONDSPARRPLAN =====
         const annualContribution = monthlyContribution * 12;
-        const frontLoadFee = year === 0 ? annualContribution * (fundParams.frontLoad / 100) : 0;
+        // Debeka: 2,5% Einstiegskosten über 5 Jahre verteilt = 0,5% pro Jahr
+        const frontLoadFee = year < 5 ? annualContribution * (fundParams.frontLoad / 100 / 5) : 0;
         const netContribution = annualContribution - frontLoadFee;
 
         fundContributionsTotal += annualContribution;
