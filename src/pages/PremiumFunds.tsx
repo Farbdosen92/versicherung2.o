@@ -39,28 +39,17 @@ import {
   Legend,
 } from 'recharts';
 import { DebekaEmbed } from '@/components/DebekaEmbed';
+import { realFundsData, FundData } from '@/data/realFundsData';
+import { FundDetailsModal } from '@/components/FundDetailsModal';
 
 interface PremiumFundsProps {
   language?: 'de' | 'en';
 }
 
-interface Fund {
-  id: string;
-  name: string;
-  isin: string;
-  category: string;
-  return1y: number;
-  return3y: number;
-  return5y: number;
-  ter: number;
-  volume: string;
-  rating: number;
-  risk: 'low' | 'medium' | 'high';
-}
-
 export const PremiumFunds: React.FC<PremiumFundsProps> = ({ language = 'de' }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedFund, setSelectedFund] = useState<FundData | null>(null);
   const texts = {
     de: {
       title: 'Fondsanalyse',
@@ -122,60 +111,8 @@ export const PremiumFunds: React.FC<PremiumFundsProps> = ({ language = 'de' }) =
 
   const t = texts[language];
 
-  const funds: Fund[] = [
-    {
-      id: '1',
-      name: 'Global Equity Index',
-      isin: 'IE00B4L5Y983',
-      category: 'equity',
-      return1y: 18.5,
-      return3y: 42.3,
-      return5y: 89.7,
-      ter: 0.2,
-      volume: '€50 Mrd',
-      rating: 5,
-      risk: 'high',
-    },
-    {
-      id: '2',
-      name: 'European Bond Fund',
-      isin: 'LU0378818131',
-      category: 'bond',
-      return1y: 3.2,
-      return3y: 8.9,
-      return5y: 15.6,
-      ter: 0.4,
-      volume: '€12 Mrd',
-      rating: 4,
-      risk: 'low',
-    },
-    {
-      id: '3',
-      name: 'Balanced Growth',
-      isin: 'DE0009769869',
-      category: 'mixed',
-      return1y: 12.4,
-      return3y: 28.7,
-      return5y: 52.3,
-      ter: 0.6,
-      volume: '€8 Mrd',
-      rating: 4,
-      risk: 'medium',
-    },
-    {
-      id: '4',
-      name: 'Real Estate Europe',
-      isin: 'IE00B1FZS350',
-      category: 'realEstate',
-      return1y: 8.9,
-      return3y: 22.1,
-      return5y: 41.2,
-      ter: 0.8,
-      volume: '€5 Mrd',
-      rating: 3,
-      risk: 'medium',
-    },
-  ];
+  // Use real funds data instead of placeholder
+  const funds = realFundsData;
 
   const performanceData = [
     { year: '2020', equity: 100, bond: 100, mixed: 100, realEstate: 100 },
@@ -218,7 +155,7 @@ export const PremiumFunds: React.FC<PremiumFundsProps> = ({ language = 'de' }) =
     }
   };
 
-  const FundCard = ({ fund }: { fund: Fund }) => (
+  const FundCard = ({ fund }: { fund: FundData }) => (
     <motion.div
       whileHover={{ y: -4, scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
@@ -543,6 +480,16 @@ export const PremiumFunds: React.FC<PremiumFundsProps> = ({ language = 'de' }) =
           )}
         </motion.div>
       </div>
+
+      {/* Fund Details Modal */}
+      {selectedFund && (
+        <FundDetailsModal
+          fund={selectedFund}
+          open={!!selectedFund}
+          onOpenChange={(open) => !open && setSelectedFund(null)}
+          language={language}
+        />
+      )}
     </div>
   );
 };
