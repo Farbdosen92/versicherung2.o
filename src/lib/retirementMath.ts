@@ -1,7 +1,7 @@
 import { getErtragsanteil } from '@/utils/germanTaxCalculations';
 
 export const DEFAULT_ANNUAL_RETURN = 0.05;
-export const DEFAULT_ANNUITY_RATE = 0.03;
+export const DEFAULT_ANNUITY_RATE = 0.025; // 2,5% = 25€ pro 10.000€ Kapital (realistischer Rentenfaktor)
 export const DEFAULT_PERSONAL_TAX_RATE = 0.25;
 
 export interface PrivatePensionProjectionInput {

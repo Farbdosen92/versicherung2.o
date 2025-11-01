@@ -89,10 +89,15 @@ export const PremiumCalculator: React.FC<PremiumCalculatorProps> = ({ language =
         ? ((onboardingData?.privatePension?.contribution_A || 0) + (onboardingData?.privatePension?.contribution_B || 0))
         : (onboardingData?.privatePension?.contribution || 0);
 
+      const fundBalance = scopeBoth
+        ? ((onboardingData?.funds?.balance_A || 0) + (onboardingData?.funds?.balance_B || 0))
+        : (onboardingData?.funds?.balance || 0);
+
       setInputs(prev => ({
         ...prev,
         currentAge,
         monthlyContribution: contribution || prev.monthlyContribution,
+        startCapital: fundBalance, // Verwende Startkapital aus Onboarding (kann auch 0 sein)
       }));
       setShowResults(true); // Auto-show results if data is available
     }
