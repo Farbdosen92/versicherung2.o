@@ -11,6 +11,7 @@ import {
   Download,
   Share2,
   Sparkles,
+  Info,
 } from 'lucide-react';
 import {
   Card,
@@ -24,6 +25,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Tooltip as ShadTooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -33,6 +40,7 @@ import {
   FlexiblePayoutSimulator,
   PensionGapCard,
 } from '@/components/pension';
+import { projectPrivatePension, qualifiesFor1262 } from '@/lib/retirementMath';
 import {
   AreaChart,
   Area,
@@ -205,7 +213,19 @@ export const PremiumCalculator: React.FC<PremiumCalculatorProps> = ({ language =
   const finalCapital = chartData[chartData.length - 1]?.capital || 0;
   const totalContributions = chartData[chartData.length - 1]?.contributions || 0;
   const totalReturns = chartData[chartData.length - 1]?.returns || 0;
-  const monthlyPension = Math.round((finalCapital * 0.04) / 12);
+  
+  // Calculate realistic pension using projectPrivatePension
+  const pensionProjection = projectPrivatePension({
+    monthlyContribution: inputs.monthlyContribution,
+    years,
+    startCapital: inputs.startCapital,
+    annualReturn: inputs.expectedReturn / 100,
+    retirementAge: inputs.retirementAge,
+    useHalfIncomeTaxation: qualifiesFor1262(inputs.retirementAge, years),
+  });
+  
+  const monthlyPension = Math.round(pensionProjection.netMonthly);
+  const ertragsanteil = pensionProjection.ertragsanteil;
 
   const InputField = ({
     label,
@@ -264,7 +284,7 @@ export const PremiumCalculator: React.FC<PremiumCalculatorProps> = ({ language =
     icon: React.ElementType;
     label: string;
     value: string;
-    subtitle?: string;
+    subtitle?: string | React.ReactNode;
     color: string;
   }) => (
     <motion.div
@@ -518,7 +538,31 @@ export const PremiumCalculator: React.FC<PremiumCalculatorProps> = ({ language =
                         icon={TrendingUp}
                         label={t.monthlyPension}
                         value={`€${monthlyPension.toLocaleString('de-DE')}`}
-                        subtitle={language === 'de' ? 'bei 4% Entnahme' : 'at 4% withdrawal'}
+                        subtitle={
+                          <TooltipProvider>
+                            <div className="flex items-center gap-1">
+                              <span>
+                                {language === 'de' 
+                                  ? `Ertragsanteil: ${ertragsanteil}% (Rentenalter ${inputs.retirementAge})`
+                                  : `Taxable portion: ${ertragsanteil}% (retirement age ${inputs.retirementAge})`
+                                }
+                              </span>
+                              <ShadTooltip>
+                                <TooltipTrigger asChild>
+                                  <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  <p className="text-xs">
+                                    {language === 'de'
+                                      ? `Der Ertragsanteil nach §22 EStG beträgt ${ertragsanteil}% und wird bei der Steuerberechnung berücksichtigt. Dieser Wert ändert sich je nach Rentenalter.`
+                                      : `The taxable portion (Ertragsanteil) according to §22 EStG is ${ertragsanteil}% and is considered in the tax calculation. This value changes based on retirement age.`
+                                    }
+                                  </p>
+                                </TooltipContent>
+                              </ShadTooltip>
+                            </div>
+                          </TooltipProvider>
+                        }
                         color="from-green-500 to-green-600"
                       />
                       <ResultCard
