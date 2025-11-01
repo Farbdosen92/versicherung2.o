@@ -1,0 +1,110 @@
+name: Update Debeka Data Daily
+
+on:
+  schedule:
+    # Runs daily at 3:00 AM UTC (4:00 AM CET in winter, 4:00 AM CEST in summer)
+    # Note: During summer time (CEST), 3 AM UTC = 5 AM CEST
+    # During winter time (CET), 3 AM UTC = 4 AM CET ✓
+    - cron: '0 3 * * *'
+  
+  # Allow manual trigger for testing
+  workflow_dispatch:
+
+jobs:
+  fetch-and-deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: local-version-2
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install Chromium (for Puppeteer)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y chromium-browser
+    
+    - name: Install Puppeteer
+      run: npm install puppeteer --save-dev
+    
+    - name: Fetch Debeka Data with Puppeteer
+      run: |
+        echo "📅 Current time: $(TZ='Europe/Berlin' date)"
+        echo "🎭 Fetching Debeka Global Shares data with Puppeteer..."
+        node scripts/fetch-debeka-puppeteer.js
+      env:
+        PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+        PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
+    
+    - name: Check if data changed
+      id: check_changes
+      run: |
+        if git diff --quiet public/debeka-data.json; then
+          echo "changed=false" >> $GITHUB_OUTPUT
+          echo "ℹ️  No changes detected in Debeka data"
+        else
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "✅ Debeka data updated"
+        fi
+    
+    - name: Commit updated data
+      if: steps.check_changes.outputs.changed == 'true'
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add public/debeka-data*.json
+        git commit -m "chore: Update Debeka data - $(TZ='Europe/Berlin' date '+%d.%m.%Y %H:%M CET')"
+        git push
+    
+    - name: Build with updated data
+      if: steps.check_changes.outputs.changed == 'true'
+      run: npm run build:client
+      env:
+        NODE_ENV: production
+        VITE_BASE_PATH: "/${{ github.event.repository.name }}/"
+    
+    - name: Setup Pages
+      if: steps.check_changes.outputs.changed == 'true'
+      uses: actions/configure-pages@v4
+    
+    - name: Upload artifact
+      if: steps.check_changes.outputs.changed == 'true'
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: './dist'
+    
+    - name: Deploy to GitHub Pages
+      if: steps.check_changes.outputs.changed == 'true'
+      id: deployment
+      uses: actions/deploy-pages@v4
+    
+    - name: Summary
+      run: |
+        echo "## Debeka Data Update Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Time**: $(TZ='Europe/Berlin' date '+%d.%m.%Y %H:%M CET')" >> $GITHUB_STEP_SUMMARY
+        echo "- **Changed**: ${{ steps.check_changes.outputs.changed }}" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ steps.check_changes.outputs.changed }}" == "true" ]; then
+          echo "- **Deployed**: ✅ Yes" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- **Deployed**: ⏭️  Skipped (no changes)" >> $GITHUB_STEP_SUMMARY
+        fi
