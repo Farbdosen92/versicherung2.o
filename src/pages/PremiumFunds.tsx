@@ -38,6 +38,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
+import { DebekaEmbed } from '@/components/DebekaEmbed';
 
 interface PremiumFundsProps {
   language?: 'de' | 'en';
@@ -334,6 +335,7 @@ export const PremiumFunds: React.FC<PremiumFundsProps> = ({ language = 'de' }) =
       </section>
 
       <div className="container mx-auto px-4 lg:px-8 py-12">
+        {/* Debeka Info Card */}
         <Card className="glass-card mb-10">
           <CardHeader>
             <CardTitle>{language === 'de' ? 'Debeka Global Shares & Fondspolice' : 'Debeka Global Shares & insurance wrapper'}</CardTitle>
@@ -394,6 +396,16 @@ export const PremiumFunds: React.FC<PremiumFundsProps> = ({ language = 'de' }) =
             </div>
           </CardContent>
         </Card>
+
+        {/* Live Debeka Price Widget - NEW */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.6 }}
+          className="mb-10"
+        >
+          <DebekaEmbed />
+        </motion.div>
 
         {/* Search and Filters */}
         <motion.div
